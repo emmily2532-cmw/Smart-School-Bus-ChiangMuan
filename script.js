@@ -71,7 +71,7 @@ video.addEventListener('play', async () => {
 // 4. ฟังก์ชันดึงรูปภาพนักเรียนมาสอน AI (แก้ชื่อโฟลเดอร์ตามนักเรียนที่มีจริง)
 function loadLabeledImages() {
     // 🔴 เปลี่ยนชื่อตรงนี้ให้ตรงกับชื่อโฟลเดอร์รูปนักเรียนของคุณครู
-    const labels = ['เด็กชายเอ', 'เด็กหญิงบี', 'นายสมชาย']; 
+    const labels = ['Chuthathip'];
     
     return Promise.all(
         labels.map(async label => {
