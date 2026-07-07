@@ -8,11 +8,11 @@ const video = document.getElementById('video');
 let isScanningAllowed = true; // ตัวแปรสำหรับป้องกันการสแกนชื่อเดิมซ้ำรัวๆ
 
 // 1. โหลดโมเดล AI (ต้องมีโฟลเดอร์ models อยู่ในที่เดียวกับเว็บ)
-// โค้ดใหม่:
+// เปลี่ยนบรรทัดการโหลดโมเดลจากเดิมที่เรียก ./models ให้เป็นลิงก์ CDN นี้แทนครับ
 Promise.all([
-    faceapi.nets.ssdMobilenetv1.loadFromUri('./models'),
-    faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
-    faceapi.nets.faceLandmark68Net.loadFromUri('./models')
+    faceapi.nets.ssdMobilenetv1.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
+    faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
+    faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights')
 ]).then(startVideo);
 
 // 2. ฟังก์ชันเปิดกล้องหน้ารถ
