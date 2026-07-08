@@ -9,18 +9,21 @@ let modelsLoaded = false;
 
 // 1. โหลดโมเดล AI จาก Server ต้นทาง (CDN)
 async function initModels() {
-    // ลิงก์จากเซิร์ฟเวอร์ต้นฉบับ
+    console.log("🚀 กำลังเริ่มฟังก์ชันโหลดโมเดล..."); // เช็คว่าฟังก์ชันเริ่มทำงานไหม
     const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
     
-    await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
-    ]);
-    modelsLoaded = true;
-    console.log("✅ โหลดโมเดลจาก Server ต้นทางเรียบร้อย!");
+    try {
+        await Promise.all([
+            faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+        ]);
+        modelsLoaded = true;
+        console.log("✅ โหลดโมเดลจาก Server ต้นทางเรียบร้อย! modelsLoaded = " + modelsLoaded);
+    } catch (err) {
+        console.error("❌ เกิดข้อผิดพลาดตอนโหลดโมเดล:", err);
+    }
 }
-initModels();
 
 // 2. ฟังก์ชันเปิดกล้อง (ใช้ window. เพื่อให้ปุ่มใน HTML เรียกใช้ได้)
 window.startVideo = function() {
