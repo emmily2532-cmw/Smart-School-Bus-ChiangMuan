@@ -10,7 +10,7 @@ let modelsLoaded = false;
 // 1. โหลดโมเดล AI จาก Server ต้นทาง (CDN)
 async function initModels() {
     console.log("🚀 กำลังเริ่มฟังก์ชันโหลดโมเดล..."); // เช็คว่าฟังก์ชันเริ่มทำงานไหม
-    const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
     
     try {
         await Promise.all([
