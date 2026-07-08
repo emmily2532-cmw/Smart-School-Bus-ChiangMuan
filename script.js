@@ -7,7 +7,7 @@ const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbyceO8xYIfmc2vbz
 const video = document.getElementById('video');
 let isScanningAllowed = true;
 
-// 1. โหลดโมเดล AI
+// 1. โหลดโมเดล AI (โหลดผ่านอินเทอร์เน็ต CDN)
 Promise.all([
     faceapi.nets.ssdMobilenetv1.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
     faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
@@ -20,7 +20,7 @@ function startVideo() {
         .then(stream => { 
             video.srcObject = stream; 
             
-            // ✅ จุดสำคัญ: เมื่อกล้องเปิดสำเร็จ ให้ซ่อนหน้าจอล็อก และโชว์เว็บหลัก
+            // ซ่อนหน้าจอล็อกเมื่อเปิดกล้องสำเร็จ
             const cameraGate = document.getElementById('camera-gate');
             const mainContent = document.getElementById('main-content');
             
@@ -45,7 +45,7 @@ video.addEventListener('play', async () => {
     const displaySize = { width: video.videoWidth, height: video.videoHeight };
     faceapi.matchDimensions(canvas, displaySize);
 
-    // ปรับความเร็วเป็น 1000ms (1 วินาที) เพื่อไม่ให้มือถือค้าง
+    // ประมวลผลทุกๆ 1 วินาที ลดอาการมือถือค้าง
     setInterval(async () => {
         const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors();
         const resizedDetections = faceapi.resizeResults(detections, displaySize);
@@ -58,16 +58,18 @@ video.addEventListener('play', async () => {
             const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() });
             drawBox.draw(canvas);
 
+            // หากเจอใบหน้าที่ตรงกับในฐานข้อมูล และอยู่ในสถานะพร้อมสแกน
             if (result.label !== 'unknown' && isScanningAllowed) {
-                isScanningAllowed = false; 
+                isScanningAllowed = false; // ล็อกการสแกนทันที ป้องกันส่งซ้ำ
                 
                 let studentName = result.label;
                 document.getElementById('scan-status').innerText = "✅ เช็คชื่อสำเร็จ: " + studentName;
                 
-                // ยิงข้อมูลไป Google Sheets
+                // ยิงข้อมูลชื่อและสถานะไปเก็บบน Google Sheets
                 fetch(GOOGLE_APP_URL + "?student_name=" + studentName + "&status=boarded")
                     .then(response => console.log("บันทึกข้อมูล " + studentName + " สำเร็จ!"));
 
+                // หน่วงเวลา 10 วินาทีก่อนเริ่มสแกนคนต่อไป
                 setTimeout(() => { 
                     isScanningAllowed = true; 
                     document.getElementById('scan-status').innerText = "✅ กล้องพร้อม! รอสแกนคนต่อไป..."; 
@@ -77,17 +79,31 @@ video.addEventListener('play', async () => {
     }, 1000); 
 });
 
-// 4. โหลดรูปภาพต้นแบบ (อย่าลืมแก้ชื่อโฟลเดอร์ภาษาไทยตรงนี้ถ้ามีการเปลี่ยนนะครับ)
+// 4. โหลดรูปภาพต้นแบบนักเรียน (เพิ่มรายชื่อล่าสุดแล้ว)
 function loadLabeledImages() {
-    const labels = ['Chuthathip']; // <--- ใส่ชื่อให้ตรงกับโฟลเดอร์ใน labeled_images
+    const labels = [
+        'นางสาวจุฑาทิพย์_เทพน้อย',
+        'นางสาวฐิตารีย์_เกตุวีระพงศ์',
+        'นายนราวิชญ์_วงค์นนทิ',
+        'นายภูมินทร์_ยะแสง',
+        'นายวชิรวิทย์_ชาวน่าน',
+        'นายศุกลวัฒน์_กวนฮางฮอง'
+    ]; 
     
     return Promise.all(
         labels.map(async label => {
             const descriptions = [];
-            for (let i = 1; i <= 2; i++) { 
+            // 🔴 แก้ไขตรงนี้: เปลี่ยนเงื่อนไขเป็น i <= 3 เพื่อให้ดึงรูป 1.jpg, 2.jpg, และ 3.jpg
+            for (let i = 1; i <= 3; i++) { 
                 const img = await faceapi.fetchImage(`./labeled_images/${label}/${i}.jpg`);
                 const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-                descriptions.push(detections.descriptor);
+                
+                // เช็คว่า AI มองเห็นหน้าในรูปนั้นไหม เพื่อป้องกัน Error
+                if (detections) {
+                    descriptions.push(detections.descriptor);
+                } else {
+                    console.warn(`ไม่พบใบหน้าในไฟล์ ${label}/${i}.jpg`);
+                }
             }
             return new faceapi.LabeledFaceDescriptors(label, descriptions);
         })
