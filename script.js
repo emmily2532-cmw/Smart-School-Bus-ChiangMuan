@@ -111,4 +111,9 @@ async function loadLabeledImages() {
 }
 
 // 5. สั่งให้เริ่มโหลดโมเดลทันทีเมื่อหน้าเว็บพร้อม
-window.addEventListener('load', initModels);
+// เปลี่ยนบรรทัดล่างสุดของไฟล์ script.js จากเดิม initModels(); เป็น:
+
+window.addEventListener('load', () => {
+    console.log("🔥 หน้าเว็บโหลดครบแล้ว เริ่มฟังก์ชัน initModels...");
+    initModels();
+});
