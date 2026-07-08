@@ -17,18 +17,19 @@ Promise.all([
 
 // 2. ฟังก์ชันเปิดกล้องหน้ารถ
 function startVideo() {
-    navigator.mediaDevices.getUserMedia({ video: true })
+    // 🔴 เปลี่ยนเป็นบังคับใช้กล้องหน้ามือถือ (facingMode: 'user')
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
         .then(stream => { 
             video.srcObject = stream; 
-            // ซ่อนกล่องเตือนเมื่อเปิดกล้องได้
-            document.getElementById('camera-warning').style.display = 'none'; 
+            
+            // ✅ ถ้าเปิดกล้องสำเร็จ ให้ซ่อนหน้าจอล็อก และแสดงเว็บหลัก
+            document.getElementById('camera-gate').style.display = 'none'; 
+            document.getElementById('main-content').style.display = 'block';
         })
         .catch(err => {
             console.error("ไม่สามารถเปิดกล้องได้: ", err);
-            // โชว์กล่องเตือนสีแดงเมื่อเปิดกล้องไม่ได้
-            document.getElementById('camera-warning').style.display = 'block';
-            document.getElementById('scan-status').innerText = "❌ ระงับการสแกน: รอการเชื่อมต่อกล้อง";
-            document.getElementById('scan-status').style.color = "#E74C3C";
+            // ❌ ถ้าเปิดไม่ได้ หน้าจอล็อกจะไม่หายไป และให้กดปุ่มลองใหม่ได้
+            alert("⚠️ ไม่สามารถเข้าสู่ระบบได้ กรุณาอนุญาตให้ใช้งานกล้องครับ");
         });
 }
 
