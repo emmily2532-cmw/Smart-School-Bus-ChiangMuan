@@ -79,7 +79,7 @@ video.addEventListener('play', async () => {
     }, 1000); 
 });
 
-// 4. โหลดรูปภาพต้นแบบนักเรียน (เพิ่มรายชื่อล่าสุดแล้ว)
+// 4. โหลดรูปภาพต้นแบบนักเรียน (ปรับให้ยืดหยุ่นขึ้น)
 function loadLabeledImages() {
     const labels = [
         'นางสาวจุฑาทิพย์_เทพน้อย',
@@ -93,16 +93,17 @@ function loadLabeledImages() {
     return Promise.all(
         labels.map(async label => {
             const descriptions = [];
-            // 🔴 แก้ไขตรงนี้: เปลี่ยนเงื่อนไขเป็น i <= 3 เพื่อให้ดึงรูป 1.jpg, 2.jpg, และ 3.jpg
             for (let i = 1; i <= 3; i++) { 
-                const img = await faceapi.fetchImage(`./labeled_images/${label}/${i}.jpg`);
-                const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-                
-                // เช็คว่า AI มองเห็นหน้าในรูปนั้นไหม เพื่อป้องกัน Error
-                if (detections) {
-                    descriptions.push(detections.descriptor);
-                } else {
-                    console.warn(`ไม่พบใบหน้าในไฟล์ ${label}/${i}.jpg`);
+                try {
+                    const img = await faceapi.fetchImage(`./labeled_images/${label}/${i}.jpg`);
+                    const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
+                    
+                    // ถ้าตรวจเจอหน้า ให้เก็บข้อมูล ถ้าไม่เจอก็ให้ข้ามไป ไม่ทำให้โปรแกรมค้าง
+                    if (detections) {
+                        descriptions.push(detections.descriptor);
+                    }
+                } catch (error) {
+                    console.log(`ไม่พบไฟล์หรือตรวจไม่พบหน้าในไฟล์: ${label}/${i}.jpg`);
                 }
             }
             return new faceapi.LabeledFaceDescriptors(label, descriptions);
