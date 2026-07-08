@@ -1,15 +1,14 @@
 // ==========================================
-// 🔴 ตั้งค่า Google Sheets
+// 🔴 การตั้งค่าระบบ
 // ==========================================
 const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbyceO8xYIfmc2vbz4rKiI4_CT3TUreAUGuXGoXUuR4C1WIg5QNSPzXAtQR9HDHOJG0t/exec";
-
 const video = document.getElementById('video');
 let isScanningAllowed = true;
 let modelsLoaded = false; 
 
-// 1. โหลดโมเดล AI จาก Server ต้นทาง (CDN)
+// 1. ฟังก์ชันโหลดโมเดลจาก CDN (เสถียรที่สุด)
 async function initModels() {
-    console.log("🚀 กำลังเริ่มฟังก์ชันโหลดโมเดล..."); // เช็คว่าฟังก์ชันเริ่มทำงานไหม
+    console.log("🚀 กำลังเริ่มโหลดโมเดล...");
     const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
     
     try {
@@ -19,16 +18,18 @@ async function initModels() {
             faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
         ]);
         modelsLoaded = true;
-        console.log("✅ โหลดโมเดลจาก Server ต้นทางเรียบร้อย! modelsLoaded = " + modelsLoaded);
+        console.log("✅ โมเดลโหลดสำเร็จ!");
+        document.getElementById('scan-status').innerText = "✅ พร้อมใช้งาน! กดปุ่มเพื่อเริ่ม";
     } catch (err) {
         console.error("❌ เกิดข้อผิดพลาดตอนโหลดโมเดล:", err);
+        document.getElementById('scan-status').innerText = "❌ โหลดโมเดลล้มเหลว";
     }
 }
 
-// 2. ฟังก์ชันเปิดกล้อง (ใช้ window. เพื่อให้ปุ่มใน HTML เรียกใช้ได้)
+// 2. ฟังก์ชันเปิดกล้อง
 window.startVideo = function() {
     if (!modelsLoaded) {
-        alert("⏳ กำลังโหลดโมเดล AI... โปรดรอสักครู่");
+        alert("⏳ กำลังโหลดโมเดล... กรุณารอสักครู่");
         return;
     }
     
@@ -45,7 +46,7 @@ window.startVideo = function() {
 
 // 3. เริ่มสแกนเมื่อวิดีโอทำงาน
 video.addEventListener('play', async () => {
-    document.getElementById('scan-status').innerText = "✅ กล้องพร้อม! เริ่มสแกนได้เลย";
+    document.getElementById('scan-status').innerText = "🔍 กำลังประมวลผล...";
     
     const labeledFaceDescriptors = await loadLabeledImages();
     const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
@@ -69,20 +70,21 @@ video.addEventListener('play', async () => {
             if (result.label !== 'unknown' && isScanningAllowed) {
                 isScanningAllowed = false;
                 let studentName = result.label;
-                document.getElementById('scan-status').innerText = "✅ เช็คชื่อสำเร็จ: " + studentName;
+                document.getElementById('scan-status').innerText = "✅ เช็คชื่อ: " + studentName;
                 
-                fetch(GOOGLE_APP_URL + "?student_name=" + studentName + "&status=boarded");
+                // ส่งข้อมูลไป Google Sheets
+                fetch(GOOGLE_APP_URL + "?student_name=" + encodeURIComponent(studentName) + "&status=boarded");
 
                 setTimeout(() => { 
                     isScanningAllowed = true; 
-                    document.getElementById('scan-status').innerText = "✅ กล้องพร้อม! รอสแกนคนต่อไป..."; 
+                    document.getElementById('scan-status').innerText = "✅ กล้องพร้อม! รอคนต่อไป..."; 
                 }, 10000);
             }
         });
     }, 1000); 
 });
 
-// 4. โหลดรูปภาพจากโฟลเดอร์นักเรียน
+// 4. โหลดรูปภาพนักเรียน (ต้องมีในโฟลเดอร์ ./labeled_images)
 async function loadLabeledImages() {
     const labels = [
         'นางสาวจุฑาทิพย์_เทพน้อย',
@@ -101,9 +103,12 @@ async function loadLabeledImages() {
                     const img = await faceapi.fetchImage(`./labeled_images/${label}/${i}.jpg`);
                     const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
                     if (detections) descriptions.push(detections.descriptor);
-                } catch (e) { console.log(`ข้ามไฟล์: ${label}/${i}.jpg`); }
+                } catch (e) { console.log(`ข้าม: ${label}/${i}.jpg`); }
             }
             return new faceapi.LabeledFaceDescriptors(label, descriptions);
         })
     );
 }
+
+// 5. สั่งให้เริ่มโหลดโมเดลทันทีเมื่อหน้าเว็บพร้อม
+window.addEventListener('load', initModels);
