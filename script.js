@@ -8,11 +8,12 @@ let isScanningAllowed = true;
 let modelsLoaded = false; 
 
 // 1. โหลดโมเดล AI จากโฟลเดอร์ ./models ในเครื่องเรา
+// เปลี่ยนจาก './models' เป็น '/Smart-School-Bus-ChiangMuan/models'
 async function initModels() {
     await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('/models')
+        faceapi.nets.ssdMobilenetv1.loadFromUri('/Smart-School-Bus-ChiangMuan/models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('/Smart-School-Bus-ChiangMuan/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('/Smart-School-Bus-ChiangMuan/models')
     ]);
     modelsLoaded = true;
     console.log("✅ โมเดล AI โหลดเสร็จเรียบร้อย!");
