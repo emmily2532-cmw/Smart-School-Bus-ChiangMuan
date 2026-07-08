@@ -71,7 +71,7 @@ video.addEventListener('play', async () => {
                 setTimeout(() => { 
                     isScanningAllowed = true; 
                     document.getElementById('scan-status').innerText = "✅ กล้องพร้อม! รอสแกนคนต่อไป..."; 
-                }, 5000);
+                }, 10000);
             }
         });
     }, 1000); 
