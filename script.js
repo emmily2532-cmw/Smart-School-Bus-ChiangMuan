@@ -10,16 +10,16 @@ let modelsLoaded = false;
 // 1. โหลดโมเดล AI ด้วย Path แบบยืดหยุ่น (ใช้จุดนำหน้า)
 // วิธีนี้จะทำให้มันหาโฟลเดอร์ models เจอไม่ว่าชื่อ Repository จะคืออะไรครับ
 async function initModels() {
-    // ลบชื่อ Repository ออก ให้ใช้แค่ ./models
+    const MODEL_URL = window.location.origin + '/Smart-School-Bus-ChiangMuan/models';
+    
     await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri('./models'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('./models')
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
     ]);
     modelsLoaded = true;
-    console.log("✅ โมเดล AI โหลดเสร็จเรียบร้อย!");
+    console.log("✅ โหลดโมเดลจาก: " + MODEL_URL);
 }
-initModels();
 
 // 2. ฟังก์ชันเปิดกล้อง (ใช้ window. เพื่อให้ปุ่มใน HTML เรียกใช้ได้)
 window.startVideo = function() {
