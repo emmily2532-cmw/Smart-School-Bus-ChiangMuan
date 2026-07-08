@@ -9,9 +9,9 @@ let isScanningAllowed = true;
 
 // 1. โหลดโมเดล AI (โหลดผ่านอินเทอร์เน็ต CDN)
 Promise.all([
-    faceapi.nets.ssdMobilenetv1.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-    faceapi.nets.faceRecognitionNet.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights'),
-    faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights')
+    faceapi.nets.ssdMobilenetv1.loadFromUri('./models'),
+    faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+    faceapi.nets.faceLandmark68Net.loadFromUri('./models')
 ]).then(startVideo);
 
 // 2. ฟังก์ชันเปิดกล้อง (บังคับกล้องหน้า และ ปลดล็อกหน้าจอ)
