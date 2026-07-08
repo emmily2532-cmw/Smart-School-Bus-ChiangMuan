@@ -7,13 +7,14 @@ const video = document.getElementById('video');
 let isScanningAllowed = true;
 let modelsLoaded = false; 
 
-// 1. โหลดโมเดล AI จากโฟลเดอร์ ./models ในเครื่องเรา
-// เปลี่ยนจาก './models' เป็น '/Smart-School-Bus-ChiangMuan/models'
+// 1. โหลดโมเดล AI ด้วย Path แบบยืดหยุ่น (ใช้จุดนำหน้า)
+// วิธีนี้จะทำให้มันหาโฟลเดอร์ models เจอไม่ว่าชื่อ Repository จะคืออะไรครับ
 async function initModels() {
+    // ลบชื่อ Repository ออก ให้ใช้แค่ ./models
     await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri('/Smart-School-Bus-ChiangMuan/models'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('/Smart-School-Bus-ChiangMuan/models'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('/Smart-School-Bus-ChiangMuan/models')
+        faceapi.nets.ssdMobilenetv1.loadFromUri('./models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('./models')
     ]);
     modelsLoaded = true;
     console.log("✅ โมเดล AI โหลดเสร็จเรียบร้อย!");
