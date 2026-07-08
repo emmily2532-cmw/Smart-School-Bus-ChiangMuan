@@ -10,9 +10,9 @@ let modelsLoaded = false;
 // 1. โหลดโมเดล AI จากโฟลเดอร์ ./models ในเครื่องเรา
 async function initModels() {
     await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri('./models'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('./models')
+        faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('/models')
     ]);
     modelsLoaded = true;
     console.log("✅ โมเดล AI โหลดเสร็จเรียบร้อย!");
