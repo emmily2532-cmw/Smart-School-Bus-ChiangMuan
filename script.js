@@ -18,8 +18,18 @@ Promise.all([
 // 2. ฟังก์ชันเปิดกล้องหน้ารถ
 function startVideo() {
     navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => console.error("ไม่สามารถเปิดกล้องได้: ", err));
+        .then(stream => { 
+            video.srcObject = stream; 
+            // ซ่อนกล่องเตือนเมื่อเปิดกล้องได้
+            document.getElementById('camera-warning').style.display = 'none'; 
+        })
+        .catch(err => {
+            console.error("ไม่สามารถเปิดกล้องได้: ", err);
+            // โชว์กล่องเตือนสีแดงเมื่อเปิดกล้องไม่ได้
+            document.getElementById('camera-warning').style.display = 'block';
+            document.getElementById('scan-status').innerText = "❌ ระงับการสแกน: รอการเชื่อมต่อกล้อง";
+            document.getElementById('scan-status').style.color = "#E74C3C";
+        });
 }
 
 // 3. เริ่มสแกนเมื่อวิดีโอเล่น
