@@ -1,43 +1,46 @@
 // ==========================================
-// 🔴 ใส่ URL Web App ของ Google Sheets ที่นี่
+// 🔴 ตั้งค่า Google Sheets
 // ==========================================
 const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbyceO8xYIfmc2vbz4rKiI4_CT3TUreAUGuXGoXUuR4C1WIg5QNSPzXAtQR9HDHOJG0t/exec";
-// ==========================================
 
 const video = document.getElementById('video');
 let isScanningAllowed = true;
+let modelsLoaded = false; 
 
-// 1. โหลดโมเดล AI (โหลดผ่านอินเทอร์เน็ต CDN)
-Promise.all([
-    faceapi.nets.ssdMobilenetv1.loadFromUri('./models'),
-    faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
-    faceapi.nets.faceLandmark68Net.loadFromUri('./models')
-]).then(startVideo);
+// 1. โหลดโมเดล AI จากโฟลเดอร์ ./models ในเครื่องเรา
+async function initModels() {
+    await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri('./models'),
+        faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('./models')
+    ]);
+    modelsLoaded = true;
+    console.log("✅ โมเดล AI โหลดเสร็จเรียบร้อย!");
+}
+initModels();
 
-// 2. ฟังก์ชันเปิดกล้อง (บังคับกล้องหน้า และ ปลดล็อกหน้าจอ)
-function startVideo() {
+// 2. ฟังก์ชันเปิดกล้อง (ใช้ window. เพื่อให้ปุ่มใน HTML เรียกใช้ได้)
+window.startVideo = function() {
+    if (!modelsLoaded) {
+        alert("⏳ กำลังโหลดโมเดล AI... โปรดรอสักครู่");
+        return;
+    }
+    
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
         .then(stream => { 
             video.srcObject = stream; 
-            
-            // ซ่อนหน้าจอล็อกเมื่อเปิดกล้องสำเร็จ
-            const cameraGate = document.getElementById('camera-gate');
-            const mainContent = document.getElementById('main-content');
-            
-            if(cameraGate) cameraGate.style.display = 'none'; 
-            if(mainContent) mainContent.style.display = 'block';
+            document.getElementById('camera-gate').style.display = 'none'; 
+            document.getElementById('main-content').style.display = 'block';
         })
         .catch(err => {
-            console.error("ไม่สามารถเปิดกล้องได้: ", err);
-            alert("⚠️ ไม่สามารถเข้าสู่ระบบได้ กรุณาอนุญาตให้ใช้งานกล้องหน้าครับ");
+            alert("⚠️ ไม่สามารถเปิดกล้องได้: " + err);
         });
 }
 
-// 3. เริ่มสแกนเมื่อวิดีโอเล่น
+// 3. เริ่มสแกนเมื่อวิดีโอทำงาน
 video.addEventListener('play', async () => {
     document.getElementById('scan-status').innerText = "✅ กล้องพร้อม! เริ่มสแกนได้เลย";
-    document.getElementById('scan-status').style.color = "#1abc9c";
-
+    
     const labeledFaceDescriptors = await loadLabeledImages();
     const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
 
@@ -45,7 +48,6 @@ video.addEventListener('play', async () => {
     const displaySize = { width: video.videoWidth, height: video.videoHeight };
     faceapi.matchDimensions(canvas, displaySize);
 
-    // ประมวลผลทุกๆ 1 วินาที ลดอาการมือถือค้าง
     setInterval(async () => {
         const detections = await faceapi.detectAllFaces(video).withFaceLandmarks().withFaceDescriptors();
         const resizedDetections = faceapi.resizeResults(detections, displaySize);
@@ -58,18 +60,13 @@ video.addEventListener('play', async () => {
             const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() });
             drawBox.draw(canvas);
 
-            // หากเจอใบหน้าที่ตรงกับในฐานข้อมูล และอยู่ในสถานะพร้อมสแกน
             if (result.label !== 'unknown' && isScanningAllowed) {
-                isScanningAllowed = false; // ล็อกการสแกนทันที ป้องกันส่งซ้ำ
-                
+                isScanningAllowed = false;
                 let studentName = result.label;
                 document.getElementById('scan-status').innerText = "✅ เช็คชื่อสำเร็จ: " + studentName;
                 
-                // ยิงข้อมูลชื่อและสถานะไปเก็บบน Google Sheets
-                fetch(GOOGLE_APP_URL + "?student_name=" + studentName + "&status=boarded")
-                    .then(response => console.log("บันทึกข้อมูล " + studentName + " สำเร็จ!"));
+                fetch(GOOGLE_APP_URL + "?student_name=" + studentName + "&status=boarded");
 
-                // หน่วงเวลา 10 วินาทีก่อนเริ่มสแกนคนต่อไป
                 setTimeout(() => { 
                     isScanningAllowed = true; 
                     document.getElementById('scan-status').innerText = "✅ กล้องพร้อม! รอสแกนคนต่อไป..."; 
@@ -79,8 +76,8 @@ video.addEventListener('play', async () => {
     }, 1000); 
 });
 
-// 4. โหลดรูปภาพต้นแบบนักเรียน (ปรับให้ยืดหยุ่นขึ้น)
-function loadLabeledImages() {
+// 4. โหลดรูปภาพจากโฟลเดอร์นักเรียน
+async function loadLabeledImages() {
     const labels = [
         'นางสาวจุฑาทิพย์_เทพน้อย',
         'นางสาวฐิตารีย์_เกตุวีระพงศ์',
@@ -93,18 +90,12 @@ function loadLabeledImages() {
     return Promise.all(
         labels.map(async label => {
             const descriptions = [];
-            for (let i = 1; i <= 1; i++) {
+            for (let i = 1; i <= 3; i++) { 
                 try {
                     const img = await faceapi.fetchImage(`./labeled_images/${label}/${i}.jpg`);
                     const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-                    
-                    // ถ้าตรวจเจอหน้า ให้เก็บข้อมูล ถ้าไม่เจอก็ให้ข้ามไป ไม่ทำให้โปรแกรมค้าง
-                    if (detections) {
-                        descriptions.push(detections.descriptor);
-                    }
-                } catch (error) {
-                    console.log(`ไม่พบไฟล์หรือตรวจไม่พบหน้าในไฟล์: ${label}/${i}.jpg`);
-                }
+                    if (detections) descriptions.push(detections.descriptor);
+                } catch (e) { console.log(`ข้ามไฟล์: ${label}/${i}.jpg`); }
             }
             return new faceapi.LabeledFaceDescriptors(label, descriptions);
         })
