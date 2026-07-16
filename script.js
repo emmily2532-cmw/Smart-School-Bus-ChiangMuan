@@ -49,7 +49,7 @@ video.addEventListener('play', async () => {
     document.getElementById('scan-status').innerText = "🔍 กำลังประมวลผล...";
     
     const labeledFaceDescriptors = await loadLabeledImages();
-    const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
+    const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.4);
 
     const canvas = document.getElementById('overlay');
     const displaySize = { width: video.videoWidth, height: video.videoHeight };
